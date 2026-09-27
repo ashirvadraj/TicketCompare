@@ -1,0 +1,236 @@
+package com.ticketcompare.movies.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ticketcompare.movies.data.model.Cinema
+import com.ticketcompare.movies.data.model.Movie
+import com.ticketcompare.movies.data.model.Show
+import com.ticketcompare.movies.ui.components.ShowtimeCard
+import com.ticketcompare.movies.ui.theme.CinemaGold
+import com.ticketcompare.movies.ui.theme.CrimsonAlert
+import com.ticketcompare.movies.ui.theme.ElectricIndigo
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MovieDetailScreen(
+    movie: Movie,
+    cinemas: List<Cinema>,
+    shows: List<Show>,
+    isWatchlisted: Boolean,
+    onToggleWatchlist: () -> Unit,
+    onShowSelected: (Show) -> Unit,
+    onBack: () -> Unit
+) {
+    var selectedDate by remember { mutableStateOf("5 Oct") }
+    val dates = listOf("5 Oct", "6 Oct", "7 Oct", "8 Oct", "9 Oct")
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = movie.title,
+                        maxLines = 1,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onToggleWatchlist) {
+                        Icon(
+                            imageVector = if (isWatchlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Watchlist",
+                            tint = if (isWatchlisted) CrimsonAlert else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 32.dp)
+        ) {
+            // MOVIE BANNER & META
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Rating",
+                                tint = CinemaGold,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "${movie.rating} / 10",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "(${movie.voteCount} votes)",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+
+                        // Certification
+                        Box(
+                            modifier = Modifier
+                                .background(ElectricIndigo.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = movie.certification,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ElectricIndigo
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "${movie.durationMinutes} mins • ${movie.genre.joinToString(", ")}",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "Languages: ${movie.languages.joinToString(", ")}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = movie.synopsis,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+
+            // DATE STRIP PICKER
+            item {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    Text(
+                        text = "SELECT DATE",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                    )
+
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(dates) { d ->
+                            val isSelected = selectedDate == d
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        if (isSelected) CinemaGold else MaterialTheme.colorScheme.surface,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) CinemaGold else MaterialTheme.colorScheme.outline,
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .clickable { selectedDate = d }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = d,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // SHOWTIMES PER CINEMA
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Available Cinemas & Live Comparisons",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    cinemas.forEach { cinema ->
+                        val cinemaShows = shows.filter { it.cinemaId == cinema.id }
+                        if (cinemaShows.isNotEmpty()) {
+                            ShowtimeCard(
+                                cinema = cinema,
+                                shows = cinemaShows,
+                                onShowSelected = onShowSelected
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

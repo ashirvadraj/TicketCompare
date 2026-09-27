@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TicketCompare</string>
+    <string name="tagline">Compare. Save. Book.</string>
+    <string name="find_cheapest">Find the cheapest legitimate way to book a movie ticket.</string>
+</resources>
