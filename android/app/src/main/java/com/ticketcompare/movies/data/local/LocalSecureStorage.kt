@@ -108,8 +108,8 @@ class LocalSecureStorage(context: Context) {
             listOf(
                 BookingRecord(
                     id = "BK-10829",
-                    movieId = "movie-avatar",
-                    movieTitle = "Avatar: The Way of Water",
+                    movieId = "movie-war2",
+                    movieTitle = "War 2",
                     cinemaName = "PVR INOX Mall of India",
                     date = "2026-09-24",
                     time = "05:15 PM",
@@ -138,9 +138,9 @@ class LocalSecureStorage(context: Context) {
         } else {
             listOf(
                 WatchlistItem(
-                    movieId = "movie-avatar",
-                    movieTitle = "Avatar: The Way of Water",
-                    posterUrl = "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
+                    movieId = "movie-toxic",
+                    movieTitle = "Toxic: A Fairy Tale for Grown-ups",
+                    posterUrl = "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=600&auto=format&fit=crop&q=80",
                     targetPrice = 250,
                     preferredCinema = "PVR INOX Mall of India",
                     addedTimestamp = System.currentTimeMillis()

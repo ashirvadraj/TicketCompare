@@ -106,15 +106,24 @@ export class OfferEligibilityEngine {
     let label: 'Eligible' | 'Potential offer — eligibility must be confirmed at checkout' = 'Potential offer — eligibility must be confirmed at checkout';
     let isMethodConfirmed = false;
 
+    // Helper to normalize and compare bank names (e.g. 'Axis' vs 'Axis Bank', 'SBI' vs 'SBI Card')
+    const matchBank = (offerBank?: string, pmBank?: string): boolean => {
+      if (!offerBank || !pmBank) return false;
+      const clean = (s: string) => s.toUpperCase().replace(/\b(BANK|CARD|SERVICES|FINANCE)\b/g, '').replace(/[^A-Z0-9]/g, '').trim();
+      const o = clean(offerBank);
+      const p = clean(pmBank);
+      return o === p || o.includes(p) || p.includes(o);
+    };
+
     if (ctx.userPaymentMethods && ctx.userPaymentMethods.length > 0) {
       for (const pm of ctx.userPaymentMethods) {
         if (offer.category === 'CREDIT_CARD' && pm.category === 'CREDIT_CARD') {
-          if (offer.bank && pm.bank?.toUpperCase() === offer.bank.toUpperCase()) {
+          if (matchBank(offer.bank, pm.bank)) {
             isMethodConfirmed = true;
             break;
           }
         } else if (offer.category === 'DEBIT_CARD' && pm.category === 'DEBIT_CARD') {
-          if (offer.bank && pm.bank?.toUpperCase() === offer.bank.toUpperCase()) {
+          if (matchBank(offer.bank, pm.bank)) {
             isMethodConfirmed = true;
             break;
           }

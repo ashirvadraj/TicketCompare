@@ -90,6 +90,8 @@ fun TicketCompareMainApp(
     var selectedShow by remember { mutableStateOf<Show?>(null) }
     var selectedPlatformForSeats by remember { mutableStateOf("pvr") }
     var showsForSelectedMovie by remember { mutableStateOf<List<Show>>(emptyList()) }
+    var isSyncingOffers by remember { mutableStateOf(false) }
+    var lastOffersSyncTime by remember { mutableStateOf(System.currentTimeMillis()) }
 
     // Initial Data Fetch
     LaunchedEffect(currentCity) {
@@ -261,7 +263,22 @@ fun TicketCompareMainApp(
                 }
 
                 Screen.OFFERS -> {
-                    OffersWalletScreen(offers = offers)
+                    OffersWalletScreen(
+                        offers = offers,
+                        isSyncing = isSyncingOffers,
+                        lastSyncTime = lastOffersSyncTime,
+                        onSyncClick = {
+                            coroutineScope.launch {
+                                isSyncingOffers = true
+                                val result = offerRepo.syncLiveOffers()
+                                if (result.offers.isNotEmpty()) {
+                                    offers = result.offers
+                                }
+                                lastOffersSyncTime = result.syncedAt
+                                isSyncingOffers = false
+                            }
+                        }
+                    )
                 }
 
                 Screen.BOOKINGS -> {

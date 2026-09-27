@@ -36,30 +36,64 @@ fun PaymentProfileScreen(
     var selectedBank by remember { mutableStateOf("Axis Bank") }
     var selectedCardType by remember { mutableStateOf("CREDIT") }
 
-    val bankOptions = listOf("Axis Bank", "Kotak", "IDFC FIRST", "RBL Bank", "IndusInd", "YES BANK", "Amex")
+    val bankOptions = listOf(
+        "ICICI Bank",
+        "HDFC Bank",
+        "Axis Bank",
+        "SBI Card",
+        "Kotak Mahindra Bank",
+        "RBL Bank",
+        "IDFC FIRST Bank",
+        "IndusInd Bank",
+        "AU Small Finance Bank",
+        "Federal Bank",
+        "American Express",
+        "PhonePe UPI",
+        "Google Pay UPI",
+        "CRED Pay UPI"
+    )
 
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Add Payment Method", fontWeight = FontWeight.Bold) },
+            title = { Text("Add Payment Instrument", fontWeight = FontWeight.Bold) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Select only bank name and card type. We NEVER request or store sensitive card numbers or CVVs.",
+                        text = "Select only bank name and instrument type. TicketCompare NEVER asks for or stores card numbers or CVVs.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
-                    Text("Bank:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    bankOptions.forEach { b ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedBank = b }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = selectedBank == b, onClick = { selectedBank = b })
-                            Text(text = b, fontSize = 13.sp)
+                    Text("Select Bank / UPI Provider:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    
+                    Box(modifier = Modifier.height(240.dp)) {
+                        LazyColumn {
+                            items(bankOptions) { b ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { selectedBank = b }
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(selected = selectedBank == b, onClick = { selectedBank = b })
+                                    Text(text = b, fontSize = 13.sp)
+                                }
+                            }
+                        }
+                    }
+
+                    if (!selectedBank.contains("UPI")) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("Type:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { selectedCardType = "CREDIT" }) {
+                                RadioButton(selected = selectedCardType == "CREDIT", onClick = { selectedCardType = "CREDIT" })
+                                Text("Credit Card", fontSize = 12.sp)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { selectedCardType = "DEBIT" }) {
+                                RadioButton(selected = selectedCardType == "DEBIT", onClick = { selectedCardType = "DEBIT" })
+                                Text("Debit Card", fontSize = 12.sp)
+                            }
                         }
                     }
                 }
@@ -67,13 +101,23 @@ fun PaymentProfileScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        val isUpi = selectedBank.contains("UPI")
+                        val category = if (isUpi) "UPI" else (if (selectedCardType == "DEBIT") "DEBIT_CARD" else "CREDIT_CARD")
+                        val providerApp = when {
+                            selectedBank.contains("Google", ignoreCase = true) -> "GOOGLE_PAY"
+                            selectedBank.contains("PhonePe", ignoreCase = true) -> "PHONEPE"
+                            selectedBank.contains("CRED", ignoreCase = true) -> "CRED"
+                            else -> null
+                        }
+
                         onAddMethod(
                             SavedPaymentMethod(
                                 id = "pm-${selectedBank.lowercase().replace(" ", "")}-${System.currentTimeMillis()}",
-                                category = "CREDIT_CARD",
-                                bank = selectedBank,
-                                cardType = selectedCardType,
-                                cardNetwork = "VISA",
+                                category = category,
+                                bank = if (isUpi) null else selectedBank,
+                                cardType = if (isUpi) null else selectedCardType,
+                                cardNetwork = if (isUpi) null else "VISA",
+                                providerApp = providerApp,
                                 isSelected = true
                             )
                         )

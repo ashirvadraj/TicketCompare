@@ -214,3 +214,12 @@ data class CouponValidationResponse(
     val message: String,
     val coupon: Offer? = null
 )
+
+@JsonClass(generateAdapter = true)
+data class LiveOfferSyncResponse(
+    val success: Boolean = true,
+    val message: String = "",
+    val count: Int = 0,
+    val syncedAt: Long = 0L,
+    val offers: List<Offer> = emptyList()
+)

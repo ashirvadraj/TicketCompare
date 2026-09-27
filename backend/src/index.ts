@@ -56,7 +56,7 @@ app.get('/api/cinemas', (req: Request, res: Response) => {
 // 3. Shows with Multi-Platform Comparison
 app.get('/api/shows', (req: Request, res: Response) => {
   const city = (req.query.city as string) || 'Noida';
-  const movieId = (req.query.movieId as string) || 'movie-devara';
+  const movieId = (req.query.movieId as string) || 'movie-war2';
   const cinemaId = req.query.cinemaId as string | undefined;
   const dateStr = (req.query.date as string) || undefined;
 
@@ -132,13 +132,46 @@ app.post('/api/pricing/verify', (req: Request, res: Response) => {
   }
 });
 
-// 7. Offers Directory
+// 7. Offers Directory & Live Synchronization
 app.get('/api/offers', (req: Request, res: Response) => {
   const category = req.query.category as string | undefined;
+  const bank = req.query.bank as string | undefined;
+  let offers = offerRepository.getAllOffers();
+
   if (category && category !== 'ALL') {
-    return res.json(offerRepository.getOffersByCategory(category));
+    offers = offers.filter(o => o.category === category);
   }
-  res.json(offerRepository.getAllOffers());
+
+  if (bank && bank !== 'ALL') {
+    const cleanBank = bank.toUpperCase().replace(/\b(BANK|CARD)\b/g, '').trim();
+    offers = offers.filter(o => o.bank && o.bank.toUpperCase().includes(cleanBank));
+  }
+
+  res.json(offers);
+});
+
+// Real-Time Bank & Platform Offer Sync
+app.post('/api/offers/sync', (req: Request, res: Response) => {
+  const syncResult = offerRepository.syncLiveOffers();
+  res.json({
+    success: true,
+    message: `Synchronized ${syncResult.count} live bank & partner offers in real time.`,
+    count: syncResult.count,
+    syncedAt: syncResult.syncedAt,
+    offers: syncResult.offers
+  });
+});
+
+app.get('/api/offers/live', (req: Request, res: Response) => {
+  const offers = offerRepository.getAllOffers();
+  const banks = Array.from(new Set(offers.map(o => o.bank).filter(Boolean)));
+  res.json({
+    totalOffers: offers.length,
+    lastSyncTimestamp: offerRepository.getLastSyncTimestamp(),
+    supportedBanks: banks,
+    supportedProviders: ['BookMyShow', 'District by Zomato', 'PVR INOX', 'Cinepolis'],
+    offers
+  });
 });
 
 // 8. Coupon Code Validation

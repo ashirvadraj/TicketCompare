@@ -48,8 +48,12 @@ interface TicketCompareApiService {
 
     @GET("api/offers")
     suspend fun getOffers(
-        @Query("category") category: String? = null
+        @Query("category") category: String? = null,
+        @Query("bank") bank: String? = null
     ): List<Offer>
+
+    @POST("api/offers/sync")
+    suspend fun syncLiveOffers(): LiveOfferSyncResponse
 
     @POST("api/offers/validate-coupon")
     suspend fun validateCoupon(
