@@ -6,6 +6,14 @@
 Package Name: `com.ticketcompare.movies`  
 Platform: Android (Jetpack Compose + Material 3) & Node.js/TypeScript REST Backend Service
 
+[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK%20(v1.0.0)-4F46E5?style=for-the-badge&logo=android&logoColor=white)](https://github.com/ashirvadraj/TicketCompare/releases/download/v1.0.0/TicketCompare-debug.apk)
+[![GitHub Release](https://img.shields.io/badge/GitHub-Release%20Page-F59E0B?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ashirvadraj/TicketCompare/releases/tag/v1.0.0)
+
+### 📲 Quick APK Download
+* **Direct Download**: [TicketCompare-debug.apk](https://github.com/ashirvadraj/TicketCompare/releases/download/v1.0.0/TicketCompare-debug.apk) (18.4 MB)
+* **GitHub Releases**: [Release v1.0.0](https://github.com/ashirvadraj/TicketCompare/releases/tag/v1.0.0)
+* **Repository Tree**: Located in the [`/apk`](https://github.com/ashirvadraj/TicketCompare/tree/main/apk) folder.
+
 ---
 
 ## 1. Executive Summary & Core Philosophy
