@@ -152,7 +152,13 @@ fun HomeScreen(
 
         // QUICK FILTER CHIPS
         item {
-            val chips = listOf("🔥 Trending", "📅 Today", "🚀 Tomorrow", "🌟 IMAX", "🕶️ 3D", "🇮🇳 Hindi", "🇬🇧 English")
+            val todayStr = remember { java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(java.util.Calendar.getInstance().time) }
+            val tomorrowStr = remember {
+                val cal = java.util.Calendar.getInstance()
+                cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
+                java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(cal.time)
+            }
+            val chips = listOf("🔥 In Cinemas Now", "📅 Today ($todayStr)", "🚀 Tomorrow ($tomorrowStr)", "🌟 IMAX 3D", "🕶️ 3D", "🇮🇳 Hindi", "🇬🇧 English")
             LazyRow(
                 modifier = Modifier.padding(vertical = 14.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp),

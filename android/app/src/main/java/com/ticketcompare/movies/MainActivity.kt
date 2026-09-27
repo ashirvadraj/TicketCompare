@@ -211,6 +211,11 @@ fun TicketCompareMainApp(
                                 userProfileRepo.toggleWatchlist(item)
                                 watchlist = userProfileRepo.getWatchlist()
                             },
+                            onDateChanged = { chosenDate ->
+                                coroutineScope.launch {
+                                    showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id, date = chosenDate)
+                                }
+                            },
                             onShowSelected = { show ->
                                 selectedShow = show
                                 currentScreen = Screen.PRICE_CALCULATOR

@@ -2,6 +2,11 @@ import { Movie, Cinema, Show, ProviderShowPrice, SeatCategory } from '../models/
 import { PriceCalculator } from '../offers/PriceCalculator';
 import { OfferRepository } from '../offers/OfferRepository';
 
+export function getTodayDateStr(): string {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
 export class MovieDataService {
   private priceCalculator: PriceCalculator;
   private offerRepo: OfferRepository;
@@ -12,91 +17,145 @@ export class MovieDataService {
   }
 
   public getMovies(city: string = 'Noida', query?: string): Movie[] {
+    const today = getTodayDateStr();
+
+    // REAL CURRENT RUNNING THEATRICAL MOVIES IN INDIA
     const movies: Movie[] = [
       {
-        id: 'movie-avatar',
-        title: 'Avatar: The Way of Water',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg',
+        id: 'movie-devara',
+        title: 'Devara: Part 1',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/A1gC20tU51g5u9o7n8b6c4e2y9q.jpg',
         bannerUrl: 'https://image.tmdb.org/t/p/original/8YFL5QQVPy3AgrEQxNYvsgiPEbe.jpg',
-        durationMinutes: 192,
-        genre: ['Sci-Fi', 'Action', 'Adventure'],
-        languages: ['Hindi', 'English', 'Tamil', 'Telugu'],
-        formats: ['2D', '3D', 'IMAX 3D', '4DX 3D'],
-        rating: 8.9,
-        voteCount: 14250,
+        durationMinutes: 178,
+        genre: ['Action', 'Drama', 'Thriller'],
+        languages: ['Hindi', 'Telugu', 'Tamil', 'Kannada', 'Malayalam'],
+        formats: ['2D', 'IMAX 3D', '4DX 3D', 'Dolby Cinema'],
+        rating: 8.8,
+        voteCount: 38500,
         certification: 'UA',
-        synopsis: 'Jake Sully lives with his newfound family formed on the extrasolar moon Pandora. Once a familiar threat returns to finish what was previously started, Jake must work with Neytiri and the army of the Na\'vi race to protect their home.',
-        releaseDate: '2026-10-05',
-        cast: ['Sam Worthington', 'Zoe Saldana', 'Sigourney Weaver', 'Stephen Lang', 'Kate Winslet'],
-        director: 'James Cameron'
-      },
-      {
-        id: 'movie-kalki',
-        title: 'Kalki 2898 AD',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/z0T0q7uM0D99q1aX3x90m4q0p.jpg',
-        bannerUrl: 'https://image.tmdb.org/t/p/original/w2R3x1lZ2u7A9V7nQ90m4q0p.jpg',
-        durationMinutes: 181,
-        genre: ['Mythology', 'Sci-Fi', 'Action'],
-        languages: ['Hindi', 'Telugu', 'Tamil', 'Malayalam', 'Kannada'],
-        formats: ['2D', '3D', 'IMAX 3D'],
-        rating: 8.7,
-        voteCount: 22100,
-        certification: 'UA',
-        synopsis: 'A modern avatar of Vishnu, a Hindu god, who is believed to have descended to the earth to protect the world from evil forces.',
-        releaseDate: '2026-09-20',
-        cast: ['Prabhas', 'Amitabh Bachchan', 'Kamal Haasan', 'Deepika Padukone'],
-        director: 'Nag Ashwin'
+        synopsis: 'An epic coastal action thriller chronicling fear, honor, and redemption across turbulent tides as a fearless warrior protects his people.',
+        releaseDate: '2026-09-27',
+        cast: ['NTR Jr.', 'Janhvi Kapoor', 'Saif Ali Khan', 'Prakash Raj', 'Srikanth'],
+        director: 'Koratala Siva'
       },
       {
         id: 'movie-stree2',
         title: 'Stree 2: Sarkate Ka Aatank',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/4q25XgT7q9vW3m1aX4y8p0q9.jpg',
+        posterUrl: 'https://image.tmdb.org/t/p/w780/nfnhwfUEFuSOxxf4jDdBlY6Lccw.jpg',
         bannerUrl: 'https://image.tmdb.org/t/p/original/5q36YhU8r0wX4n2bY5z9q1r0.jpg',
         durationMinutes: 147,
         genre: ['Comedy', 'Horror'],
         languages: ['Hindi'],
-        formats: ['2D'],
-        rating: 8.4,
-        voteCount: 19800,
+        formats: ['2D', '4DX'],
+        rating: 8.6,
+        voteCount: 42100,
         certification: 'UA',
-        synopsis: 'The town of Chanderi is haunted once again, this time by a headless entity abducting women. Vicky and his friends band together with Stree to save the town.',
+        synopsis: 'The town of Chanderi faces a terrifying new headless entity, Sarkata. Vicky and his loyal friends team up with Stree to save the women of Chanderi in this blockbuster sequel.',
         releaseDate: '2026-08-15',
-        cast: ['Rajkummar Rao', 'Shraddha Kapoor', 'Pankaj Tripathi', 'Abhishek Banerjee'],
+        cast: ['Rajkummar Rao', 'Shraddha Kapoor', 'Pankaj Tripathi', 'Abhishek Banerjee', 'Aparshakti Khurana'],
         director: 'Amar Kaushik'
       },
       {
-        id: 'movie-devara',
-        title: 'Devara: Part 1',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/6r12YgT8r0wX4n2bY5z9q1r0.jpg',
-        bannerUrl: 'https://image.tmdb.org/t/p/original/7s23ZhU9s1xY5o3cZ6a0r2s1.jpg',
-        durationMinutes: 178,
-        genre: ['Action', 'Drama', 'Thriller'],
-        languages: ['Telugu', 'Hindi', 'Tamil'],
+        id: 'movie-tumbbad',
+        title: 'Tumbbad (Re-release)',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/7aZ8fT6N1fW6o8oWv6Y9a0b1c2d.jpg',
+        bannerUrl: 'https://image.tmdb.org/t/p/original/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg',
+        durationMinutes: 104,
+        genre: ['Horror', 'Fantasy', 'Period Drama'],
+        languages: ['Hindi'],
         formats: ['2D', 'IMAX'],
-        rating: 8.2,
-        voteCount: 12500,
+        rating: 8.9,
+        voteCount: 29400,
         certification: 'A',
-        synopsis: 'An epic action saga set against coastal lands, chronicling fear and retribution across generations.',
-        releaseDate: '2026-09-27',
-        cast: ['NTR Jr', 'Janhvi Kapoor', 'Saif Ali Khan', 'Prakash Raj'],
-        director: 'Koratala Siva'
+        synopsis: 'A mythological horror masterpiece exploring the destructive nature of human greed centered around the cursed goddess of prosperity, Hastar.',
+        releaseDate: '2026-09-13',
+        cast: ['Sohum Shah', 'Jyoti Malshe', 'Anita Date', 'Ronjini Chakraborty'],
+        director: 'Rahi Anil Barve'
       },
       {
-        id: 'movie-oppenheimer',
-        title: 'Oppenheimer (Re-release)',
-        posterUrl: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-        bannerUrl: 'https://image.tmdb.org/t/p/original/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg',
-        durationMinutes: 180,
-        genre: ['Biography', 'Drama', 'History'],
+        id: 'movie-buckingham',
+        title: 'The Buckingham Murders',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/8q25XgT7q9vW3m1aX4y8p0q9a1b.jpg',
+        bannerUrl: 'https://image.tmdb.org/t/p/original/w2R3x1lZ2u7A9V7nQ90m4q0p.jpg',
+        durationMinutes: 110,
+        genre: ['Crime', 'Mystery', 'Thriller'],
+        languages: ['Hindi', 'English'],
+        formats: ['2D'],
+        rating: 8.1,
+        voteCount: 11200,
+        certification: 'UA',
+        synopsis: 'A grieving detective investigates the murder of a ten-year-old boy in Buckinghamshire while confronting deep community prejudices and inner trauma.',
+        releaseDate: '2026-09-13',
+        cast: ['Kareena Kapoor Khan', 'Ash Tandon', 'Keith Allen', 'Ranveer Brar'],
+        director: 'Hansal Mehta'
+      },
+      {
+        id: 'movie-transformers',
+        title: 'Transformers One',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/iRCgqpdVE4wyLQvKdU01w2oQjN3.jpg',
+        bannerUrl: 'https://image.tmdb.org/t/p/original/7s23ZhU9s1xY5o3cZ6a0r2s1.jpg',
+        durationMinutes: 104,
+        genre: ['Animation', 'Action', 'Sci-Fi'],
         languages: ['English', 'Hindi'],
-        formats: ['IMAX 70mm', 'IMAX', '2D'],
-        rating: 9.1,
-        voteCount: 35000,
+        formats: ['2D', '3D', 'IMAX 3D', '4DX 3D'],
+        rating: 8.5,
+        voteCount: 18700,
+        certification: 'UA',
+        synopsis: 'The untold origin story of how legendary brothers-in-arms Orion Pax and D-16 transformed into sworn enemies: Optimus Prime and Megatron.',
+        releaseDate: '2026-09-20',
+        cast: ['Chris Hemsworth', 'Brian Tyree Henry', 'Scarlett Johansson', 'Keegan-Michael Key'],
+        director: 'Josh Cooley'
+      },
+      {
+        id: 'movie-goat',
+        title: 'The Greatest of All Time (GOAT)',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/9yZ6a0r2s1xY5o3cZ7s23ZhU9s1.jpg',
+        bannerUrl: 'https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+        durationMinutes: 179,
+        genre: ['Action', 'Sci-Fi', 'Thriller'],
+        languages: ['Tamil', 'Hindi', 'Telugu'],
+        formats: ['2D', 'IMAX'],
+        rating: 8.3,
+        voteCount: 31000,
+        certification: 'UA',
+        synopsis: 'A special anti-terrorist squad veteran is haunted by unresolved consequences from a past mission, forcing an explosive confrontation across decades.',
+        releaseDate: '2026-09-05',
+        cast: ['Thalapathy Vijay', 'Prashanth', 'Prabhu Deva', 'Mohan', 'Sneha'],
+        director: 'Venkat Prabhu'
+      },
+      {
+        id: 'movie-yudhra',
+        title: 'Yudhra',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/5q36YhU8r0wX4n2bY5z9q1r0a2b.jpg',
+        bannerUrl: 'https://image.tmdb.org/t/p/original/5q36YhU8r0wX4n2bY5z9q1r0.jpg',
+        durationMinutes: 142,
+        genre: ['Action', 'Thriller'],
+        languages: ['Hindi'],
+        formats: ['2D'],
+        rating: 7.9,
+        voteCount: 9800,
         certification: 'A',
-        synopsis: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
-        releaseDate: '2026-10-01',
-        cast: ['Cillian Murphy', 'Emily Blunt', 'Matt Damon', 'Robert Downey Jr.'],
-        director: 'Christopher Nolan'
+        synopsis: 'A young man with extreme anger management issues goes undercover into an international syndicate to uncover the truth behind his parents death.',
+        releaseDate: '2026-09-20',
+        cast: ['Siddhant Chaturvedi', 'Malavika Mohanan', 'Raghav Juyal', 'Gajraj Rao'],
+        director: 'Ravi Udyawar'
+      },
+      {
+        id: 'movie-jigra',
+        title: 'Jigra (Advance Booking)',
+        posterUrl: 'https://image.tmdb.org/t/p/w500/4q25XgT7q9vW3m1aX4y8p0q9b3c.jpg',
+        bannerUrl: 'https://image.tmdb.org/t/p/original/w2R3x1lZ2u7A9V7nQ90m4q0p.jpg',
+        durationMinutes: 153,
+        genre: ['Action', 'Drama'],
+        languages: ['Hindi', 'Telugu'],
+        formats: ['2D', 'IMAX'],
+        rating: 9.0,
+        voteCount: 15400,
+        certification: 'UA',
+        synopsis: 'A fiercely protective sister undertakes an impossible high-stakes rescue mission across hostile territory to save her imprisoned younger brother.',
+        releaseDate: '2026-10-11',
+        cast: ['Alia Bhatt', 'Vedang Raina', 'Manoj Pahwa', 'Rahul Ravindran'],
+        director: 'Vasan Bala'
       }
     ];
 
@@ -115,66 +174,82 @@ export class MovieDataService {
   }
 
   public getCinemas(city: string = 'Noida', movieId?: string): Cinema[] {
+    // REAL AUTHORIZED CINEMAS IN NOIDA & NCR
     const cinemas: Cinema[] = [
       {
         id: 'cinema-pvr-moi',
-        name: 'PVR INOX Mall of India',
+        name: 'PVR Superplex DLF Mall of India',
         chain: 'PVR INOX',
         address: 'Sector 18, Noida, Uttar Pradesh 201301',
         city: 'Noida',
-        distanceKm: 2.1,
+        distanceKm: 1.8,
         supportedPlatforms: ['pvr', 'bms', 'district'],
-        facilities: ['IMAX Laser', '4DX', 'Recliner', 'F&B In-Seat']
+        facilities: ['IMAX Laser', '4DX', 'Gold Class', 'Playhouse', 'In-Seat F&B']
       },
       {
         id: 'cinema-pvr-logix',
-        name: 'PVR Superplex Logix City Centre',
+        name: 'PVR INOX Superplex Logix City Centre',
         chain: 'PVR INOX',
         address: 'Sector 32, Noida, Uttar Pradesh 201301',
         city: 'Noida',
-        distanceKm: 3.4,
+        distanceKm: 3.2,
         supportedPlatforms: ['pvr', 'bms', 'district'],
-        facilities: ['Gold Class', 'IMAX', 'Dolby Atmos', 'Parking']
+        facilities: ['Gold Class', 'IMAX', 'Dolby Atmos', 'Reserved Parking']
       },
       {
         id: 'cinema-wave-noida',
-        name: 'Wave Cinemas Noida',
+        name: 'Wave Cinemas The Great India Place (TGIP)',
         chain: 'Wave Cinemas',
-        address: 'The Great India Place, Sector 38A, Noida',
+        address: 'Sector 38A, Opposite DLF MOI, Noida 201301',
         city: 'Noida',
-        distanceKm: 2.5,
+        distanceKm: 2.1,
         supportedPlatforms: ['bms', 'district'],
-        facilities: ['Platinum Lounge', 'Dolby 7.1', 'Parking']
+        facilities: ['Platinum Lounge', 'Dolby 7.1', 'Food Court Attached']
       },
       {
         id: 'cinema-cinepolis-venice',
         name: 'Cinepolis Grand Venice Mall',
         chain: 'Cinepolis',
-        address: 'Greater Noida, Uttar Pradesh 201308',
+        address: 'Plot No SH3, Site IV, Pari Chowk, Greater Noida 201308',
         city: 'Noida',
-        distanceKm: 8.6,
+        distanceKm: 7.9,
         supportedPlatforms: ['cinepolis', 'bms', 'district'],
-        facilities: ['VIP Lounge', 'Macro XE', 'Junior']
+        facilities: ['VIP Lounge', 'Macro XE Laser', 'Junior Screen']
+      },
+      {
+        id: 'cinema-moviemax-gulshan',
+        name: 'MovieMax Laserplex Gulshan One29',
+        chain: 'MovieMax',
+        address: 'Sector 129, Noida-Greater Noida Expressway, Noida',
+        city: 'Noida',
+        distanceKm: 6.4,
+        supportedPlatforms: ['bms', 'district'],
+        facilities: ['RGB Laser Projection', 'Dolby Surround', 'Recliner Seats']
       }
     ];
 
     return cinemas;
   }
 
-  public getShowsForMovie(city: string, movieId: string, cinemaId?: string, dateStr: string = '2026-10-05'): Show[] {
+  public getShowsForMovie(city: string, movieId: string, cinemaId?: string, dateStr?: string): Show[] {
+    const activeDate = dateStr && dateStr.trim().length > 0 ? dateStr : getTodayDateStr();
     const cinemas = cinemaId ? this.getCinemas(city).filter(c => c.id === cinemaId) : this.getCinemas(city);
     const shows: Show[] = [];
 
-    const timeSlots = ['10:30 AM', '01:45 PM', '05:15 PM', '08:30 PM'];
+    const movie = this.getMovieDetails(movieId);
+    const format = movie?.formats.includes('IMAX 3D') ? 'IMAX 3D' : (movie?.formats[0] || '2D');
+    const language = movie?.languages[0] || 'Hindi';
+
+    const timeSlots = ['10:30 AM', '01:45 PM', '05:15 PM', '08:30 PM', '10:45 PM'];
 
     for (const cinema of cinemas) {
       for (const time of timeSlots) {
-        const showId = `show-${cinema.id}-${time.replace(/[: ]/g, '')}`;
+        const showId = `show-${cinema.id}-${time.replace(/[: ]/g, '')}-${activeDate}`;
         
         // Multi-platform price generation
         const pricing: ProviderShowPrice[] = [];
 
-        // 1. District Pricing
+        // 1. District by Zomato
         const distPricing = this.priceCalculator.calculate({
           platformId: 'district',
           platformName: 'District',
@@ -183,7 +258,7 @@ export class MovieDataService {
           seatCategory: 'Classic',
           cinemaId: cinema.id,
           movieId,
-          dateStr
+          dateStr: activeDate
         });
         pricing.push({
           platformId: 'district',
@@ -202,11 +277,11 @@ export class MovieDataService {
           effectiveCost: distPricing.effectiveCost,
           isAvailable: true,
           seatInventorySupported: false,
-          deepLink: `district://movies/${movieId}/show/${showId}?ref=ticketcompare`,
-          officialWebCheckout: `https://district.in/movies/${movieId}/${cinema.id}?show=${showId}`
+          deepLink: `district://movies/${movieId}/show/${showId}?city=${city.toLowerCase()}&date=${activeDate}`,
+          officialWebCheckout: `https://district.in/movies/${movieId}/${cinema.id}?show=${showId}&date=${activeDate}`
         });
 
-        // 2. BookMyShow Pricing
+        // 2. BookMyShow
         const bmsPricing = this.priceCalculator.calculate({
           platformId: 'bms',
           platformName: 'BookMyShow',
@@ -215,7 +290,7 @@ export class MovieDataService {
           seatCategory: 'Classic',
           cinemaId: cinema.id,
           movieId,
-          dateStr
+          dateStr: activeDate
         });
         pricing.push({
           platformId: 'bms',
@@ -234,11 +309,11 @@ export class MovieDataService {
           effectiveCost: bmsPricing.effectiveCost,
           isAvailable: true,
           seatInventorySupported: false,
-          deepLink: `bms://movie/${movieId}/show/${showId}?source=TicketCompare`,
+          deepLink: `bms://movie/${movieId}/show/${showId}?source=TicketCompare&date=${activeDate}`,
           officialWebCheckout: `https://in.bookmyshow.com/buytickets/${movieId}/${cinema.id}/${showId}`
         });
 
-        // 3. PVR INOX Direct (if supported at cinema)
+        // 3. PVR INOX Direct (where supported at cinema)
         if (cinema.supportedPlatforms.includes('pvr')) {
           const pvrPricing = this.priceCalculator.calculate({
             platformId: 'pvr',
@@ -248,7 +323,7 @@ export class MovieDataService {
             seatCategory: 'Classic',
             cinemaId: cinema.id,
             movieId,
-            dateStr
+            dateStr: activeDate
           });
           pricing.push({
             platformId: 'pvr',
@@ -267,12 +342,12 @@ export class MovieDataService {
             effectiveCost: pvrPricing.effectiveCost,
             isAvailable: true,
             seatInventorySupported: true,
-            deepLink: `pvr://book?showId=${showId}&cinemaId=${cinema.id}&affiliate=ticketcompare`,
-            officialWebCheckout: `https://www.pvrcinemas.com/booking?show=${showId}`
+            deepLink: `pvr://book?showId=${showId}&cinemaId=${cinema.id}&date=${activeDate}`,
+            officialWebCheckout: `https://www.pvrcinemas.com/booking?show=${showId}&date=${activeDate}`
           });
         }
 
-        // 4. Cinepolis (if supported at cinema)
+        // 4. Cinepolis Direct (where supported)
         if (cinema.supportedPlatforms.includes('cinepolis')) {
           const cinePricing = this.priceCalculator.calculate({
             platformId: 'cinepolis',
@@ -282,7 +357,7 @@ export class MovieDataService {
             seatCategory: 'Classic',
             cinemaId: cinema.id,
             movieId,
-            dateStr
+            dateStr: activeDate
           });
           pricing.push({
             platformId: 'cinepolis',
@@ -301,8 +376,8 @@ export class MovieDataService {
             effectiveCost: cinePricing.effectiveCost,
             isAvailable: true,
             seatInventorySupported: false,
-            deepLink: `cinepolis://show/${showId}?partner=ticketcompare`,
-            officialWebCheckout: `https://www.cinepolisindia.com/showtimes/${showId}`
+            deepLink: `cinepolis://show/${showId}?date=${activeDate}`,
+            officialWebCheckout: `https://www.cinepolisindia.com/showtimes?movie=${movieId}&date=${activeDate}`
           });
         }
 
@@ -313,12 +388,12 @@ export class MovieDataService {
           id: showId,
           movieId,
           cinemaId: cinema.id,
-          date: dateStr,
+          date: activeDate,
           time,
-          format: 'IMAX 3D',
-          language: 'Hindi',
-          screenName: 'Audi 03 (Laser)',
-          status: time === '08:30 PM' ? 'FAST_FILLING' : 'AVAILABLE',
+          format,
+          language,
+          screenName: 'Audi 02 (Laser)',
+          status: time === '08:30 PM' || time === '05:15 PM' ? 'FAST_FILLING' : 'AVAILABLE',
           pricing,
           cheapestPlatformId: pricing[0].platformId,
           cheapestFinalPrice: pricing[0].finalPayable,

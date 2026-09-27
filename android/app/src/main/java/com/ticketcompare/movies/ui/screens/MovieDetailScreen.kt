@@ -28,6 +28,15 @@ import com.ticketcompare.movies.ui.components.ShowtimeCard
 import com.ticketcompare.movies.ui.theme.CinemaGold
 import com.ticketcompare.movies.ui.theme.CrimsonAlert
 import com.ticketcompare.movies.ui.theme.ElectricIndigo
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+
+data class DatePill(
+    val dayName: String,
+    val dateText: String,
+    val isoDate: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,11 +46,32 @@ fun MovieDetailScreen(
     shows: List<Show>,
     isWatchlisted: Boolean,
     onToggleWatchlist: () -> Unit,
+    onDateChanged: (String) -> Unit,
     onShowSelected: (Show) -> Unit,
     onBack: () -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf("5 Oct") }
-    val dates = listOf("5 Oct", "6 Oct", "7 Oct", "8 Oct", "9 Oct")
+    val datePills = remember {
+        val sdfDay = SimpleDateFormat("EEE", Locale.getDefault())
+        val sdfDate = SimpleDateFormat("dd MMM", Locale.getDefault())
+        val sdfIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        (0..6).map { offset ->
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.DAY_OF_YEAR, offset)
+            val dayLabel = when (offset) {
+                0 -> "Today"
+                1 -> "Tomorrow"
+                else -> sdfDay.format(cal.time)
+            }
+            DatePill(
+                dayName = dayLabel,
+                dateText = sdfDate.format(cal.time),
+                isoDate = sdfIso.format(cal.time)
+            )
+        }
+    }
+
+    var selectedDateIso by remember { mutableStateOf(datePills.first().isoDate) }
 
     Scaffold(
         topBar = {
@@ -110,7 +140,7 @@ fun MovieDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "(${movie.voteCount} votes)",
+                                text = "(${movie.voteCount} ratings)",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
@@ -159,11 +189,11 @@ fun MovieDetailScreen(
                 }
             }
 
-            // DATE STRIP PICKER
+            // DYNAMIC DATE STRIP PICKER
             item {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     Text(
-                        text = "SELECT DATE",
+                        text = "SELECT BOOKING DATE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -175,8 +205,8 @@ fun MovieDetailScreen(
                         contentPadding = PaddingValues(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(dates) { d ->
-                            val isSelected = selectedDate == d
+                        items(datePills) { pill ->
+                            val isSelected = selectedDateIso == pill.isoDate
                             Box(
                                 modifier = Modifier
                                     .background(
@@ -188,16 +218,27 @@ fun MovieDetailScreen(
                                         if (isSelected) CinemaGold else MaterialTheme.colorScheme.outline,
                                         RoundedCornerShape(10.dp)
                                     )
-                                    .clickable { selectedDate = d }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    .clickable {
+                                        selectedDateIso = pill.isoDate
+                                        onDateChanged(pill.isoDate)
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = d,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
-                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = pill.dayName,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = pill.dateText,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
@@ -213,7 +254,7 @@ fun MovieDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "Available Cinemas & Live Comparisons",
+                        text = "Available Cinemas & Live Price Comparisons",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface

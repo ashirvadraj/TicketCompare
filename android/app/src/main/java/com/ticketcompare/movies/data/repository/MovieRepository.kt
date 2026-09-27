@@ -36,7 +36,7 @@ class MovieRepository {
         }
     }
 
-    suspend fun getShows(city: String, movieId: String, cinemaId: String? = null, date: String = "2026-10-05"): List<Show> = withContext(Dispatchers.IO) {
+    suspend fun getShows(city: String, movieId: String, cinemaId: String? = null, date: String = OfflineMockData.getDynamicDateStr(0)): List<Show> = withContext(Dispatchers.IO) {
         try {
             api.getShows(city, movieId, cinemaId, date)
         } catch (e: Exception) {

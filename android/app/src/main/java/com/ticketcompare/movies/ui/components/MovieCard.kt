@@ -90,6 +90,32 @@ fun MovieCard(
                     .padding(horizontal = 5.dp, vertical = 2.dp)
             )
 
+            // Cinematic Center Artwork Title
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = movie.title,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = movie.genre.firstOrNull()?.uppercase() ?: "",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = CinemaGold,
+                    letterSpacing = 1.sp
+                )
+            }
+
             // Lowest price banner at bottom of poster
             Box(
                 modifier = Modifier

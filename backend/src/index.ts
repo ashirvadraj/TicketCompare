@@ -56,9 +56,9 @@ app.get('/api/cinemas', (req: Request, res: Response) => {
 // 3. Shows with Multi-Platform Comparison
 app.get('/api/shows', (req: Request, res: Response) => {
   const city = (req.query.city as string) || 'Noida';
-  const movieId = (req.query.movieId as string) || 'movie-avatar';
+  const movieId = (req.query.movieId as string) || 'movie-devara';
   const cinemaId = req.query.cinemaId as string | undefined;
-  const dateStr = (req.query.date as string) || '2026-10-05';
+  const dateStr = (req.query.date as string) || undefined;
 
   const shows = movieDataService.getShowsForMovie(city, movieId, cinemaId, dateStr);
   res.json(shows);
