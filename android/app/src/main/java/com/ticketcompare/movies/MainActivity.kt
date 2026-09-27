@@ -36,7 +36,7 @@ import com.ticketcompare.movies.ui.theme.TicketCompareTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
-    HOME, SEARCH, MOVIE_DETAIL, PRICE_CALCULATOR, SEAT_SELECTION, OFFERS, BOOKINGS, PROFILE, WATCHLIST
+    HOME, SEARCH, MOVIE_DETAIL, PRICE_CALCULATOR, SEAT_SELECTION, OFFERS, BOOKINGS, PROFILE, WATCHLIST, LIVE_DATA_DEBUG
 }
 
 data class NavItem(
@@ -132,6 +132,9 @@ fun TicketCompareMainApp(
         }
     }
 
+    val fetchState by movieRepo.fetchState.collectAsState()
+    val diagnostics by movieRepo.diagnostics.collectAsState()
+
     val navItems = listOf(
         NavItem(Screen.HOME, "Home", Icons.Default.Home),
         NavItem(Screen.SEARCH, "Search", Icons.Default.Search),
@@ -194,6 +197,8 @@ fun TicketCompareMainApp(
                         onDateSelected = { selectedDate = it },
                         movies = movies,
                         cinemas = cinemas,
+                        fetchState = fetchState,
+                        diagnostics = diagnostics,
                         onMovieClick = { movie ->
                             selectedMovie = movie
                             coroutineScope.launch {
@@ -204,6 +209,7 @@ fun TicketCompareMainApp(
                         onSearchClick = { currentScreen = Screen.SEARCH },
                         onOffersClick = { currentScreen = Screen.OFFERS },
                         onRefreshClick = onRefreshShowtimes,
+                        onDebugClick = { currentScreen = Screen.LIVE_DATA_DEBUG },
                         isRefreshing = isRefreshingShowtimes,
                         lastUpdatedSeconds = lastUpdatedSeconds
                     )
@@ -349,6 +355,15 @@ fun TicketCompareMainApp(
                                 }
                             }
                         }
+                    )
+                }
+
+                Screen.LIVE_DATA_DEBUG -> {
+                    LiveDataDebugScreen(
+                        currentCity = currentCity,
+                        selectedDate = selectedDate,
+                        movieRepo = movieRepo,
+                        onBack = { currentScreen = Screen.HOME }
                     )
                 }
             }

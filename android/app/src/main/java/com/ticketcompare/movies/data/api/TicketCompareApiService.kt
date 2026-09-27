@@ -65,4 +65,10 @@ interface TicketCompareApiService {
     suspend fun validateCoupon(
         @Body body: Map<String, String>
     ): CouponValidationResponse
+
+    @GET("api/providers/diagnostics")
+    suspend fun getDiagnostics(
+        @Query("city") city: String,
+        @Query("date") date: String? = null
+    ): DiagnosticsSummary
 }

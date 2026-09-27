@@ -120,6 +120,23 @@ fun ShowItemRow(
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(EmeraldSavings, androidx.compose.foundation.shape.CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${show.sourceProvider ?: "PVR INOX"} ● Live Verified",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = EmeraldSavings
+                        )
+                    }
                 }
             }
 

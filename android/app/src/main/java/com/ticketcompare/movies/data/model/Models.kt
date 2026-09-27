@@ -73,6 +73,9 @@ data class Show(
     val totalSeats: Int = 0,
     val startTimestamp: Long? = null,
     val verifiedAtTimestamp: Long? = null,
+    val sourceProvider: String? = null,
+    val fetchedAt: String? = null,
+    val providerShowId: String? = null,
     val pricing: List<ProviderShowPrice>,
     val cheapestPlatformId: String,
     val cheapestFinalPrice: Int,
@@ -235,3 +238,42 @@ data class LiveOfferSyncResponse(
     val syncedAt: Long = 0L,
     val offers: List<Offer> = emptyList()
 )
+
+@JsonClass(generateAdapter = true)
+data class ProviderDiagnosticItem(
+    val id: String,
+    val name: String,
+    val isConnected: Boolean,
+    val httpStatus: Int,
+    val responseTimeMs: Long = 0L,
+    val cinemasCount: Int = 0,
+    val showsCount: Int = 0,
+    val validShowsCount: Int = 0,
+    val errorMessage: String? = null,
+    val lastSuccessfulFetch: String? = null,
+    val requiresCredentials: Boolean = false
+)
+
+@JsonClass(generateAdapter = true)
+data class DiagnosticsSummary(
+    val city: String = "Noida",
+    val date: String = "",
+    val timezone: String = "Asia/Kolkata",
+    val providers: List<ProviderDiagnosticItem> = emptyList(),
+    val totalProviders: Int = 0,
+    val successfulProviders: Int = 0,
+    val totalShows: Int = 0,
+    val bookableShows: Int = 0,
+    val moviesWithBookableShows: Int = 0,
+    val isLiveDataConnected: Boolean = false,
+    val message: String? = null
+)
+
+enum class ProviderFetchState {
+    IDLE,
+    LOADING,
+    LIVE_ACTIVE,       // At least one provider returned fresh shows
+    NO_SHOWS_FOUND,    // APIs worked correctly but there genuinely are 0 shows
+    DATA_UNAVAILABLE   // All providers failed or network unreachable
+}
+

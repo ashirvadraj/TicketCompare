@@ -200,9 +200,16 @@ app.post('/api/offers/validate-coupon', (req: Request, res: Response) => {
   });
 });
 
-// 9. Provider Status
+// 9. Provider Status & Diagnostics
 app.get('/api/providers/status', (req: Request, res: Response) => {
   res.json(providerRegistry.getHealthStatus());
+});
+
+app.get('/api/providers/diagnostics', (req: Request, res: Response) => {
+  const city = (req.query.city as string) || 'Noida';
+  const dateStr = (req.query.date as string) || undefined;
+  const diagnostics = movieDataService.getDiagnostics(city, dateStr);
+  res.json(diagnostics);
 });
 
 // 10. Booking Dispatch

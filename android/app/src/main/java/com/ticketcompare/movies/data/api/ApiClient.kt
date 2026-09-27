@@ -9,7 +9,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     // 10.0.2.2 is Android Emulator localhost, 127.0.0.1 for local tests
-    var baseUrl = "http://10.0.2.2:4000/"
+    var baseUrl: String = "http://10.0.2.2:4000/"
+        private set
 
     private val moshi: Moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -20,9 +21,20 @@ object ApiClient {
         .readTimeout(8, TimeUnit.SECONDS)
         .build()
 
-    val apiService: TicketCompareApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(baseUrl)
+    private var _apiService: TicketCompareApiService = buildRetrofit(baseUrl)
+
+    val apiService: TicketCompareApiService
+        get() = _apiService
+
+    fun setCustomBaseUrl(url: String) {
+        val sanitized = if (url.endsWith("/")) url else "$url/"
+        baseUrl = sanitized
+        _apiService = buildRetrofit(sanitized)
+    }
+
+    private fun buildRetrofit(url: String): TicketCompareApiService {
+        return Retrofit.Builder()
+            .baseUrl(url)
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()

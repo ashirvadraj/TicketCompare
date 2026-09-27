@@ -84,6 +84,9 @@ export interface Show {
   availableSeats: number;
   totalSeats?: number;
   verifiedAtTimestamp?: number;
+  sourceProvider?: string; // e.g. "PVR INOX", "BookMyShow", "District"
+  fetchedAt?: string; // Formatted in Asia/Kolkata
+  providerShowId?: string;
   pricing: ProviderShowPrice[];
   cheapestPlatformId: string;
   cheapestFinalPrice: number;
@@ -152,3 +155,32 @@ export interface BookingResult {
   finalPayable: number;
   instructions: string;
 }
+
+export interface ProviderDiagnosticItem {
+  id: string;
+  name: string;
+  isConnected: boolean;
+  httpStatus: number;
+  responseTimeMs: number;
+  cinemasCount: number;
+  showsCount: number;
+  validShowsCount: number;
+  errorMessage?: string;
+  lastSuccessfulFetch?: string;
+  requiresCredentials?: boolean;
+}
+
+export interface DiagnosticsSummary {
+  city: string;
+  date: string;
+  timezone: string;
+  providers: ProviderDiagnosticItem[];
+  totalProviders: number;
+  successfulProviders: number;
+  totalShows: number;
+  bookableShows: number;
+  moviesWithBookableShows: number;
+  isLiveDataConnected: boolean;
+  message?: string;
+}
+
