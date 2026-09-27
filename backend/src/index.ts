@@ -29,11 +29,12 @@ app.get('/admin', (req: Request, res: Response) => {
 
 // --- API ENDPOINTS ---
 
-// 1. Movies
+// 1. Movies (Showtime-First: returns ONLY movies with active, future bookable showtimes)
 app.get('/api/movies', (req: Request, res: Response) => {
   const city = (req.query.city as string) || 'Noida';
+  const date = (req.query.date as string) || undefined;
   const query = req.query.query as string | undefined;
-  const movies = movieDataService.getMovies(city, query);
+  const movies = movieDataService.getMovies(city, date, query);
   res.json(movies);
 });
 
@@ -53,15 +54,21 @@ app.get('/api/cinemas', (req: Request, res: Response) => {
   res.json(cinemas);
 });
 
-// 3. Shows with Multi-Platform Comparison
+// 3. Shows with Multi-Platform Comparison (Only valid future bookable shows)
 app.get('/api/shows', (req: Request, res: Response) => {
   const city = (req.query.city as string) || 'Noida';
-  const movieId = (req.query.movieId as string) || 'movie-war2';
+  const movieId = req.query.movieId as string | undefined;
   const cinemaId = req.query.cinemaId as string | undefined;
   const dateStr = (req.query.date as string) || undefined;
 
-  const shows = movieDataService.getShowsForMovie(city, movieId, cinemaId, dateStr);
+  const shows = movieDataService.getValidShows(city, movieId, cinemaId, dateStr);
   res.json(shows);
+});
+
+// Pre-Booking Final Show Recheck (Verifies show is not expired, cancelled, or sold out)
+app.get('/api/shows/:showId/verify', (req: Request, res: Response) => {
+  const result = movieDataService.verifyShow(req.params.showId);
+  res.json(result);
 });
 
 // 4. Seat Layout (PVR INOX or NOT_SUPPORTED)

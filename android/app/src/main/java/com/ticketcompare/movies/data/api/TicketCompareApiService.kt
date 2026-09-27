@@ -8,6 +8,7 @@ interface TicketCompareApiService {
     @GET("api/movies")
     suspend fun getMovies(
         @Query("city") city: String,
+        @Query("date") date: String? = null,
         @Query("query") query: String? = null
     ): List<Movie>
 
@@ -25,10 +26,15 @@ interface TicketCompareApiService {
     @GET("api/shows")
     suspend fun getShows(
         @Query("city") city: String,
-        @Query("movieId") movieId: String,
+        @Query("movieId") movieId: String? = null,
         @Query("cinemaId") cinemaId: String? = null,
-        @Query("date") date: String
+        @Query("date") date: String? = null
     ): List<Show>
+
+    @GET("api/shows/{showId}/verify")
+    suspend fun verifyShowAvailability(
+        @Path("showId") showId: String
+    ): ShowVerificationResponse
 
     @GET("api/shows/{showId}/seat-layout")
     suspend fun getSeatLayout(

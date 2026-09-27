@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ConfirmationNumber
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Search
@@ -29,6 +28,7 @@ import com.ticketcompare.movies.data.model.WatchlistItem
 import com.ticketcompare.movies.data.repository.MovieRepository
 import com.ticketcompare.movies.data.repository.OfferRepository
 import com.ticketcompare.movies.data.repository.UserProfileRepository
+import com.ticketcompare.movies.data.util.DateUtils
 import com.ticketcompare.movies.ui.screens.*
 import com.ticketcompare.movies.ui.theme.CinemaGold
 import com.ticketcompare.movies.ui.theme.ElectricIndigo
@@ -80,6 +80,10 @@ fun TicketCompareMainApp(
 
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
     var currentCity by remember { mutableStateOf(userProfileRepo.getCity()) }
+    var selectedDate by remember { mutableStateOf(DateUtils.getDynamicDateStr(0)) }
+    var isRefreshingShowtimes by remember { mutableStateOf(false) }
+    var lastUpdatedSeconds by remember { mutableStateOf(0L) }
+
     var movies by remember { mutableStateOf<List<Movie>>(emptyList()) }
     var cinemas by remember { mutableStateOf<List<Cinema>>(emptyList()) }
     var offers by remember { mutableStateOf<List<Offer>>(emptyList()) }
@@ -93,17 +97,38 @@ fun TicketCompareMainApp(
     var isSyncingOffers by remember { mutableStateOf(false) }
     var lastOffersSyncTime by remember { mutableStateOf(System.currentTimeMillis()) }
 
-    // Initial Data Fetch
-    LaunchedEffect(currentCity) {
+    // Dynamic Showtime-First Data Fetch whenever city or date changes
+    LaunchedEffect(currentCity, selectedDate) {
         coroutineScope.launch {
-            movies = movieRepo.getMovies(currentCity)
+            isRefreshingShowtimes = true
+            movies = movieRepo.getMovies(currentCity, date = selectedDate)
             cinemas = movieRepo.getCinemas(currentCity)
             offers = offerRepo.getOffers()
             paymentMethods = userProfileRepo.getPaymentMethods()
             watchlist = userProfileRepo.getWatchlist()
+            lastUpdatedSeconds = movieRepo.getLastUpdatedSeconds()
             if (selectedMovie == null && movies.isNotEmpty()) {
                 selectedMovie = movies.first()
+            } else if (movies.isNotEmpty() && movies.none { it.id == selectedMovie?.id }) {
+                selectedMovie = movies.first()
             }
+            isRefreshingShowtimes = false
+        }
+    }
+
+    val onRefreshShowtimes: () -> Unit = {
+        coroutineScope.launch {
+            isRefreshingShowtimes = true
+            movieRepo.invalidateCache()
+            movies = movieRepo.getMovies(currentCity, date = selectedDate, forceRefresh = true)
+            cinemas = movieRepo.getCinemas(currentCity)
+            lastUpdatedSeconds = movieRepo.getLastUpdatedSeconds()
+            if (selectedMovie == null && movies.isNotEmpty()) {
+                selectedMovie = movies.first()
+            } else if (movies.isNotEmpty() && movies.none { it.id == selectedMovie?.id }) {
+                selectedMovie = movies.first()
+            }
+            isRefreshingShowtimes = false
         }
     }
 
@@ -165,17 +190,22 @@ fun TicketCompareMainApp(
                             currentCity = it
                             userProfileRepo.setCity(it)
                         },
+                        selectedDate = selectedDate,
+                        onDateSelected = { selectedDate = it },
                         movies = movies,
                         cinemas = cinemas,
                         onMovieClick = { movie ->
                             selectedMovie = movie
                             coroutineScope.launch {
-                                showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id)
+                                showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id, date = selectedDate)
                                 currentScreen = Screen.MOVIE_DETAIL
                             }
                         },
                         onSearchClick = { currentScreen = Screen.SEARCH },
-                        onOffersClick = { currentScreen = Screen.OFFERS }
+                        onOffersClick = { currentScreen = Screen.OFFERS },
+                        onRefreshClick = onRefreshShowtimes,
+                        isRefreshing = isRefreshingShowtimes,
+                        lastUpdatedSeconds = lastUpdatedSeconds
                     )
                 }
 
@@ -185,7 +215,7 @@ fun TicketCompareMainApp(
                         onMovieClick = { movie ->
                             selectedMovie = movie
                             coroutineScope.launch {
-                                showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id)
+                                showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id, date = selectedDate)
                                 currentScreen = Screen.MOVIE_DETAIL
                             }
                         }
@@ -200,6 +230,7 @@ fun TicketCompareMainApp(
                             movie = movie,
                             cinemas = cinemas,
                             shows = showsForSelectedMovie,
+                            initialDate = selectedDate,
                             isWatchlisted = isWatchlisted,
                             onToggleWatchlist = {
                                 val item = WatchlistItem(
@@ -214,6 +245,7 @@ fun TicketCompareMainApp(
                                 watchlist = userProfileRepo.getWatchlist()
                             },
                             onDateChanged = { chosenDate ->
+                                selectedDate = chosenDate
                                 coroutineScope.launch {
                                     showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id, date = chosenDate)
                                 }
@@ -238,6 +270,7 @@ fun TicketCompareMainApp(
                             movieTitle = movie.title,
                             cinemaName = cinema.name,
                             userPaymentMethods = paymentMethods,
+                            movieRepo = movieRepo,
                             onSeatSelectionClick = { s, platformId ->
                                 selectedShow = s
                                 selectedPlatformForSeats = platformId
@@ -254,7 +287,7 @@ fun TicketCompareMainApp(
                         SeatSelectionScreen(
                             show = show,
                             platformId = selectedPlatformForSeats,
-                            onSeatsConfirmed = { confirmedSeats ->
+                            onSeatsConfirmed = { _ ->
                                 currentScreen = Screen.PRICE_CALCULATOR
                             },
                             onBack = { currentScreen = Screen.PRICE_CALCULATOR }
@@ -311,7 +344,7 @@ fun TicketCompareMainApp(
                             if (movie != null) {
                                 selectedMovie = movie
                                 coroutineScope.launch {
-                                    showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id)
+                                    showsForSelectedMovie = movieRepo.getShows(currentCity, movie.id, date = selectedDate)
                                     currentScreen = Screen.MOVIE_DETAIL
                                 }
                             }

@@ -7,12 +7,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,15 +23,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ticketcompare.movies.data.model.PriceBreakdown
 import com.ticketcompare.movies.data.model.SavedPaymentMethod
 import com.ticketcompare.movies.data.model.Show
+import com.ticketcompare.movies.data.repository.MovieRepository
 import com.ticketcompare.movies.engine.ClientPriceCalculationEngine
 import com.ticketcompare.movies.ui.components.PriceBreakdownCard
 import com.ticketcompare.movies.ui.components.VerifiedPriceBadge
 import com.ticketcompare.movies.ui.theme.CinemaGold
 import com.ticketcompare.movies.ui.theme.ElectricIndigo
 import com.ticketcompare.movies.ui.theme.EmeraldSavings
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,10 +41,12 @@ fun PriceCalculatorScreen(
     movieTitle: String,
     cinemaName: String,
     userPaymentMethods: List<SavedPaymentMethod>,
+    movieRepo: MovieRepository,
     onSeatSelectionClick: (Show, String) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var selectedPlatformId by remember { mutableStateOf(show.cheapestPlatformId) }
     var ticketCount by remember { mutableStateOf(1) }
@@ -52,6 +55,8 @@ fun PriceCalculatorScreen(
     var appliedCoupon by remember { mutableStateOf<String?>(null) }
     var couponMessage by remember { mutableStateOf<String?>(null) }
     var priceChangeNotice by remember { mutableStateOf<String?>(null) }
+    var isVerifyingBooking by remember { mutableStateOf(false) }
+    var unavailableDialogMessage by remember { mutableStateOf<String?>(null) }
 
     val currentPlatformPrice = show.pricing.find { it.platformId == selectedPlatformId } ?: show.pricing.first()
 
@@ -68,6 +73,34 @@ fun PriceCalculatorScreen(
         )
     }
 
+    if (unavailableDialogMessage != null) {
+        AlertDialog(
+            onDismissRequest = { unavailableDialogMessage = null },
+            title = {
+                Text(text = "Showtime Unavailable", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(text = unavailableDialogMessage ?: "This show is no longer available. Please select another show.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        unavailableDialogMessage = null
+                        onBack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ElectricIndigo)
+                ) {
+                    Text("Select Another Show")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { unavailableDialogMessage = null }) {
+                    Text("Dismiss")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -80,7 +113,7 @@ fun PriceCalculatorScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -120,32 +153,55 @@ fun PriceCalculatorScreen(
 
                         Button(
                             onClick = {
-                                // Launch official booking deep link or web checkout
-                                val targetUrl = if (currentPlatformPrice.deepLink.isNotBlank()) {
-                                    currentPlatformPrice.deepLink
-                                } else {
-                                    currentPlatformPrice.officialWebCheckout
-                                }
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    // Fallback to official web URL
-                                    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(currentPlatformPrice.officialWebCheckout))
-                                    context.startActivity(webIntent)
+                                coroutineScope.launch {
+                                    isVerifyingBooking = true
+                                    val verification = movieRepo.verifyShowAvailability(show.id)
+                                    isVerifyingBooking = false
+                                    if (!verification.isBookable) {
+                                        unavailableDialogMessage = verification.message.ifBlank { "This show is no longer available. Please select another show." }
+                                    } else {
+                                        // Launch official booking deep link or web checkout
+                                        val targetUrl = if (currentPlatformPrice.deepLink.isNotBlank()) {
+                                            currentPlatformPrice.deepLink
+                                        } else {
+                                            currentPlatformPrice.officialWebCheckout
+                                        }
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
+                                        try {
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(currentPlatformPrice.officialWebCheckout))
+                                            context.startActivity(webIntent)
+                                        }
+                                    }
                                 }
                             },
+                            enabled = !isVerifyingBooking,
                             colors = ButtonDefaults.buttonColors(containerColor = ElectricIndigo),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text(
-                                text = "Continue on ${currentPlatformPrice.platformName}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(imageVector = Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                            if (isVerifyingBooking) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Verifying...",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            } else {
+                                Text(
+                                    text = "Continue on ${currentPlatformPrice.platformName}",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
@@ -181,6 +237,33 @@ fun PriceCalculatorScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         modifier = Modifier.padding(top = 4.dp)
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(if (show.availableSeats > 20) EmeraldSavings else CinemaGold, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Live Inventory: ${show.availableSeats} of ${show.totalSeats} seats open",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (show.availableSeats > 20) EmeraldSavings else CinemaGold
+                            )
+                        }
+                        Text(
+                            text = "Date: ${show.date}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
 

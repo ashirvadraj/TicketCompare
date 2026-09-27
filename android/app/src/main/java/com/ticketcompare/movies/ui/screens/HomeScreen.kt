@@ -1,5 +1,6 @@
 package com.ticketcompare.movies.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,11 +8,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,10 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ticketcompare.movies.data.model.Cinema
 import com.ticketcompare.movies.data.model.Movie
+import com.ticketcompare.movies.data.util.DateUtils
 import com.ticketcompare.movies.ui.components.CitySelectionSheet
 import com.ticketcompare.movies.ui.components.MovieCard
 import com.ticketcompare.movies.ui.theme.CinemaGold
@@ -33,11 +38,16 @@ import com.ticketcompare.movies.ui.theme.EmeraldSavings
 fun HomeScreen(
     currentCity: String,
     onCityChanged: (String) -> Unit,
+    selectedDate: String,
+    onDateSelected: (String) -> Unit,
     movies: List<Movie>,
     cinemas: List<Cinema>,
     onMovieClick: (Movie) -> Unit,
     onSearchClick: () -> Unit,
-    onOffersClick: () -> Unit
+    onOffersClick: () -> Unit,
+    onRefreshClick: () -> Unit,
+    isRefreshing: Boolean,
+    lastUpdatedSeconds: Long
 ) {
     var showCitySheet by remember { mutableStateOf(false) }
 
@@ -150,34 +160,108 @@ fun HomeScreen(
             }
         }
 
-        // QUICK FILTER CHIPS
+        // LIVE INVENTORY STATUS & FORCE REFRESH BAR
         item {
-            val todayStr = remember { java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(java.util.Calendar.getInstance().time) }
-            val tomorrowStr = remember {
-                val cal = java.util.Calendar.getInstance()
-                cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
-                java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(cal.time)
-            }
-            val chips = listOf("🔥 In Cinemas Now", "📅 Today ($todayStr)", "🚀 Tomorrow ($tomorrowStr)", "🌟 IMAX 3D", "🕶️ 3D", "🇮🇳 Hindi", "🇬🇧 English")
-            LazyRow(
-                modifier = Modifier.padding(vertical = 14.dp),
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(chips) { chip ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
-                            .clickable { onSearchClick() }
-                            .padding(horizontal = 12.dp, vertical = 7.dp)
-                    ) {
+                            .size(8.dp)
+                            .background(EmeraldSavings, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (lastUpdatedSeconds > 0) "Verified ${lastUpdatedSeconds}s ago" else "Live Showtimes Active",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = EmeraldSavings
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .clickable(enabled = !isRefreshing) { onRefreshClick() }
+                        .padding(vertical = 4.dp, horizontal = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isRefreshing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(13.dp),
+                            strokeWidth = 2.dp,
+                            color = CinemaGold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = chip,
+                            text = "Syncing...",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = CinemaGold
                         )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = CinemaGold,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Refresh",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = CinemaGold
+                        )
+                    }
+                }
+            }
+        }
+
+        // DYNAMIC DATE SELECTOR STRIP
+        item {
+            Column(modifier = Modifier.padding(bottom = 6.dp)) {
+                Text(
+                    text = "SELECT BOOKING DATE",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(7) { offset ->
+                        val dateIso = DateUtils.getDynamicDateStr(offset)
+                        val label = DateUtils.getDayDisplayLabel(offset)
+                        val isSelected = selectedDate == dateIso
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    if (isSelected) CinemaGold else MaterialTheme.colorScheme.surface,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .border(
+                                    1.dp,
+                                    if (isSelected) CinemaGold else MaterialTheme.colorScheme.outline,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { onDateSelected(dateIso) }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             }
@@ -234,63 +318,114 @@ fun HomeScreen(
             }
         }
 
-        // TRENDING MOVIES SECTION
-        item {
-            Column(modifier = Modifier.padding(top = 20.dp)) {
-                Row(
+        // MOVIES SECTION OR EMPTY STATE
+        if (movies.isEmpty()) {
+            item {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
-                    Text(
-                        text = "Trending Movies",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "See All",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = CinemaGold,
-                        modifier = Modifier.clickable { onSearchClick() }
-                    )
-                }
-
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    items(movies) { movie ->
-                        MovieCard(
-                            movie = movie,
-                            onClick = { onMovieClick(movie) }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "🎟️ No Active Showtimes Found",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "There are no currently bookable showtimes in $currentCity for the selected date. Past, expired, or sold-out shows are automatically filtered out.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onRefreshClick,
+                            colors = ButtonDefaults.buttonColors(containerColor = ElectricIndigo),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Refresh Showtimes")
+                        }
                     }
                 }
             }
-        }
-
-        // NEARBY CINEMAS IN CITY
-        item {
-            Column(modifier = Modifier.padding(top = 24.dp, start = 20.dp, end = 20.dp)) {
-                Text(
-                    text = "Nearby Cinemas in $currentCity",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                cinemas.forEach { cinema ->
-                    Box(
+        } else {
+            // TRENDING MOVIES SECTION
+            item {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 10.dp)
-                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Playing in Cinemas Now",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Real verified showtimes with live seats",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                        Text(
+                            text = "See All",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = CinemaGold,
+                            modifier = Modifier.clickable { onSearchClick() }
+                        )
+                    }
+
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        items(movies) { movie ->
+                            MovieCard(
+                                movie = movie,
+                                onClick = { onMovieClick(movie) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // NEARBY CINEMAS IN CITY
+            item {
+                Column(modifier = Modifier.padding(top = 24.dp, start = 20.dp, end = 20.dp)) {
+                    Text(
+                        text = "Nearby Cinemas in $currentCity",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    cinemas.forEach { cinema ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp)
+                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                             .clickable {
                                 val firstMovie = movies.firstOrNull()
                                 if (firstMovie != null) onMovieClick(firstMovie)
@@ -328,4 +463,5 @@ fun HomeScreen(
             }
         }
     }
+}
 }

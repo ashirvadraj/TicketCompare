@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Star
@@ -19,11 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ticketcompare.movies.data.model.Cinema
 import com.ticketcompare.movies.data.model.Movie
 import com.ticketcompare.movies.data.model.Show
+import com.ticketcompare.movies.data.util.DateUtils
 import com.ticketcompare.movies.ui.components.ShowtimeCard
 import com.ticketcompare.movies.ui.theme.CinemaGold
 import com.ticketcompare.movies.ui.theme.CrimsonAlert
@@ -44,6 +46,7 @@ fun MovieDetailScreen(
     movie: Movie,
     cinemas: List<Cinema>,
     shows: List<Show>,
+    initialDate: String = DateUtils.getDynamicDateStr(0),
     isWatchlisted: Boolean,
     onToggleWatchlist: () -> Unit,
     onDateChanged: (String) -> Unit,
@@ -71,7 +74,7 @@ fun MovieDetailScreen(
         }
     }
 
-    var selectedDateIso by remember { mutableStateOf(datePills.first().isoDate) }
+    var selectedDateIso by remember { mutableStateOf(initialDate) }
 
     Scaffold(
         topBar = {
@@ -86,7 +89,7 @@ fun MovieDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -260,14 +263,47 @@ fun MovieDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    cinemas.forEach { cinema ->
-                        val cinemaShows = shows.filter { it.cinemaId == cinema.id }
-                        if (cinemaShows.isNotEmpty()) {
-                            ShowtimeCard(
-                                cinema = cinema,
-                                shows = cinemaShows,
-                                onShowSelected = onShowSelected
-                            )
+                    val cinemasWithShows = cinemas.filter { cinema -> shows.any { it.cinemaId == cinema.id } }
+
+                    if (cinemasWithShows.isEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "No shows scheduled for $selectedDateIso",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Shows that have already started, sold out, or not yet opened for booking are omitted. Please try another date above.",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        cinemasWithShows.forEach { cinema ->
+                            val cinemaShows = shows.filter { it.cinemaId == cinema.id }
+                            if (cinemaShows.isNotEmpty()) {
+                                ShowtimeCard(
+                                    cinema = cinema,
+                                    shows = cinemaShows,
+                                    onShowSelected = onShowSelected
+                                )
+                            }
                         }
                     }
                 }

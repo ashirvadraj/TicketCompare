@@ -68,10 +68,22 @@ data class Show(
     val language: String,
     val screenName: String,
     val status: String,
+    val isBookable: Boolean = true,
+    val availableSeats: Int = 0,
+    val totalSeats: Int = 0,
+    val startTimestamp: Long? = null,
+    val verifiedAtTimestamp: Long? = null,
     val pricing: List<ProviderShowPrice>,
     val cheapestPlatformId: String,
     val cheapestFinalPrice: Int,
     val cheapestBasePrice: Int
+)
+
+@JsonClass(generateAdapter = true)
+data class ShowVerificationResponse(
+    val isBookable: Boolean,
+    val message: String,
+    val show: Show? = null
 )
 
 @JsonClass(generateAdapter = true)

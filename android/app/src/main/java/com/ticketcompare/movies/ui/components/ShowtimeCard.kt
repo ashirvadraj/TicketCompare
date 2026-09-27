@@ -57,6 +57,7 @@ fun ShowtimeCard(
         }
 
         Spacer(modifier = Modifier.height(14.dp))
+        @Suppress("DEPRECATION")
         Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
         Spacer(modifier = Modifier.height(14.dp))
 

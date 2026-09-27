@@ -75,10 +75,15 @@ export interface Show {
   cinemaId: string;
   date: string; // YYYY-MM-DD
   time: string; // e.g. "10:30 AM"
+  startTimestamp?: number;
   format: string; // "IMAX 3D", "2D", etc.
   language: string; // "Hindi", "English"
   screenName: string;
   status: 'AVAILABLE' | 'FAST_FILLING' | 'ALMOST_FULL' | 'SOLD_OUT';
+  isBookable: boolean;
+  availableSeats: number;
+  totalSeats?: number;
+  verifiedAtTimestamp?: number;
   pricing: ProviderShowPrice[];
   cheapestPlatformId: string;
   cheapestFinalPrice: number;
